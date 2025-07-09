@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo da Memória</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 80px);
+      grid-gap: 10px;
+      margin-top: 20px;
+    }
+    .card {
+      width: 80px;
+      height: 80px;
+      background: #4F8A8B;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      color: #FFF;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      transition: background 0.3s;
+    }
+    .card.flipped {
+      background: #FBD46D;
+      color: #333;
+      cursor: default;
+    }
+    .card.matched {
+      background: #4F8A8B;
+      color: #FFF;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    #reset-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      border: none;
+      background: #1E6262;
+      color: #FFF;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #reset-btn:hover {
+      background: #163232;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogo da Memória</h1>
+  <div id="game-board"></div>
+  <button id="reset-btn">Reiniciar</button>
+
+  <script>
+    const icons = ['🍎', '🍌', '🍒', '🍇', '🍉', '🍋', '🍓', '🍍'];
+    let cards = [];
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function createBoard() {
+      cards = [];
+      firstCard = null;
+      secondCard = null;
+      lockBoard = false;
+      const board = document.getElementById('game-board');
+      board.innerHTML = '';
+      const doubledIcons = shuffle([...icons, ...icons]);
+      doubledIcons.forEach((icon, i) => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.icon = icon;
+        card.dataset.index = i;
+        card.innerHTML = '';
+        card.addEventListener('click', flipCard);
+        board.appendChild(card);
+        cards.push(card);
+      });
+    }
+
+    function flipCard() {
+      if (lockBoard) return;
+      if (this.classList.contains('flipped') || this.classList.contains('matched')) return;
+      this.classList.add('flipped');
+      this.innerHTML = this.dataset.icon;
+
+      if (!firstCard) {
+        firstCard = this;
+        return;
+      }
+      secondCard = this;
+      lockBoard = true;
+
+      if (firstCard.dataset.icon === secondCard.dataset.icon) {
+        firstCard.classList.add('matched');
+        secondCard.classList.add('matched');
+        resetTurn();
+        if (document.querySelectorAll('.card.matched').length === cards.length) {
+          setTimeout(() => alert('Parabéns, você venceu!'), 500);
+        }
+      } else {
+        setTimeout(() => {
+          firstCard.classList.remove('flipped');
+          secondCard.classList.remove('flipped');
+          firstCard.innerHTML = '';
+          secondCard.innerHTML = '';
+          resetTurn();
+        }, 1000);
+      }
+    }
+
+    function resetTurn() {
+      [firstCard, secondCard] = [null, null];
+      lockBoard = false;
+    }
+
+    document.getElementById('reset-btn').onclick = createBoard;
+
+    // Inicializa o tabuleiro ao carregar a página
+    createBoard();
+  </script>
+</body>
+</html>
